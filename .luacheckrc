@@ -85,7 +85,6 @@ read_globals = {
 	"IsModifiedClick",
 	"IsPetAttackAction",
 	"Mixin",
-	"MouseIsOver",
 	"PickupPetAction",
 	"PlaySound",
 	"SaveBindings",
