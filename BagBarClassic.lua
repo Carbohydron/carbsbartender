@@ -49,7 +49,7 @@ function BagBarMod:OnEnable()
 		self.bar = setmetatable(Bartender4.ButtonBar:Create("BagBar", self.db.profile, L["Bag Bar"]), {__index = BagBar})
 	end
 
-	if WoWClassicEra and KeyRingButton then
+	if (WoWClassicEra or WoWClassicBCC) and KeyRingButton then
 		KeyRingButton:SetScript("OnShow", nil)
 	end
 
