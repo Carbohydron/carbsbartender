@@ -11,7 +11,7 @@ License: Public Domain
 ]]
 
 local MAJOR = "LibWindow-1.1"
-local MINOR = tonumber(("$Revision$"):match("(%d+)"))
+local MINOR = 1
 
 local lib = LibStub:NewLibrary(MAJOR,MINOR)
 if not lib then return end

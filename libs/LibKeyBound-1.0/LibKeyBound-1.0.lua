@@ -10,7 +10,7 @@ Dependencies: CallbackHandler-1.0
 --]]
 
 local MAJOR = 'LibKeyBound-1.0'
-local MINOR = tonumber(("$Revision$"):match("(%d+)")) + 90000
+local MINOR = 90000 + 1
 
 --[[
 	LibKeyBound-1.0
