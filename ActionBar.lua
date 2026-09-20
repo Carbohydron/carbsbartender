@@ -190,8 +190,11 @@ local UpdateSmartTarget = [[
 ]]
 
 function ActionBar:SetupSmartTarget()
-	-- TODO(forever): needs restricted snippets; to be replaced by "unit" attribute drivers
-	if Bartender4.IsForever then return end
+	if Bartender4.IsForever then
+		-- spellbook/talents changed: the helpful/harmful classification of spells may have changed
+		self:ForAll("RefreshDrivers")
+		return
+	end
 	local s = [[
 		BT_Spell_Overrides = newtable()
 		BT_Spell_Overrides[16979] = 102401 -- wild charge (bear)

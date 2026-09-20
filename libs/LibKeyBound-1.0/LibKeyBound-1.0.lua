@@ -63,8 +63,8 @@ function LibKeyBound:Initialize()
 		}
 		f:SetPoint('TOP', 0, -24)
 		f:Hide()
-		f:SetScript('OnShow', function() PlaySound('igMainMenuOption') end)
-		f:SetScript('OnHide', function() PlaySound('gsTitleOptionExit') end)
+		f:SetScript('OnShow', function() PlaySound(SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION or 'igMainMenuOption') end)
+		f:SetScript('OnHide', function() PlaySound(SOUNDKIT and SOUNDKIT.GS_TITLE_OPTION_EXIT or 'gsTitleOptionExit') end)
 
 		f:RegisterForDrag('LeftButton')
 		f:SetScript('OnDragStart', function(f) f:StartMoving() end) 

@@ -359,11 +359,49 @@ local function ResolveSpecialStates(driver)
 	return table_concat(out, ";")
 end
 
+-- The unit selection lists for smart targeting (mouseover / autoassist / self- and focus-cast modifiers),
+-- per spell type: help / harm / all. Each ends in a bare "nil", meaning "no unit override".
+function StateBar:GetSmartTargetDrivers()
+	local preSelf = ""
+	if Bartender4.db.profile.selfcastmodifier then
+		preSelf = "[mod:SELFCAST]player;"
+	end
+
+	local preFocus = ""
+	if Bartender4.db.profile.focuscastmodifier then
+		preFocus = "[mod:FOCUSCAST,@focus,exists,nodead]focus;"
+	end
+
+	local helpDriver, harmDriver, allDriver = "", "", ""
+	if self.config.autoassist then
+		helpDriver = "[help]nil; [@targettarget, help]targettarget;"
+		harmDriver = "[harm]nil; [@targettarget, harm]targettarget;"
+		allDriver  = "" -- no autoassist without harm/help distinction
+	end
+
+	if self.config.mouseover then
+		local moMod = ""
+		if Bartender4.db.profile.mouseovermod and Bartender4.db.profile.mouseovermod ~= "NONE" then
+			moMod = ",mod:" .. Bartender4.db.profile.mouseovermod
+		end
+		helpDriver = ("[@mouseover,exists,help%s]mouseover;"):format(moMod) .. helpDriver
+		harmDriver = ("[@mouseover,nodead,exists,harm%s]mouseover;"):format(moMod) .. harmDriver
+		allDriver  = ("[@mouseover,nodead,exists%s]mouseover;"):format(moMod) .. allDriver
+	end
+
+	local drivers = {}
+	if helpDriver ~= "" then drivers.help = ("%s%s%s nil"):format(preSelf, preFocus, helpDriver) end
+	if harmDriver ~= "" then drivers.harm = ("%s%s nil"):format(preFocus, harmDriver) end
+	if allDriver ~= "" then drivers.all = ("%s%s%s nil"):format(preSelf, preFocus, allDriver) end
+	return next(drivers) and drivers or nil
+end
+
 function StateBar:UpdateStatesForever(statedriver)
 	statedriver = ResolveSpecialStates(statedriver or "0")
+	local smartTarget = self:GetSmartTargetDrivers()
 	self:ForAll("SetStateDriver", statedriver)
+	self:ForAll("SetSmartTargetDrivers", smartTarget)
 	self:ForAll("UpdateState")
-	-- TODO(forever): smart target (mouseover/autoassist) needs per-button "unit" attribute drivers
 end
 
 function StateBar:GetStanceState(stance)

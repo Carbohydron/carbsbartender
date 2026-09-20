@@ -723,6 +723,79 @@ refreshFrame:SetScript("OnUpdate", function(f)
 	f:Hide()
 end)
 
+-- Smart target ("mouseover"/"autoassist" casting): drivers[type] is a macro-conditional list (ending in a bare
+-- "nil") that picks the unit for helpful / harmful / both spells. Per page state the list is combined with the
+-- conditions of the page clause and registered as a "unit" attribute driver.
+local function SmartTargetType(kind, action)
+	local spellId
+	if kind == "action" then
+		local actionType, id = GetActionInfo(action)
+		if actionType == "spell" then spellId = id end
+	elseif kind == "spell" then
+		spellId = tonumber(action)
+	end
+	if not spellId or spellId <= 0 or not (C_Spell and C_Spell.IsSpellHelpful and C_Spell.IsSpellHarmful) then return nil end
+	local helpful, harmful = C_Spell.IsSpellHelpful(spellId), C_Spell.IsSpellHarmful(spellId)
+	if helpful == harmful then
+		return "all"
+	elseif helpful then
+		return "help"
+	else
+		return "harm"
+	end
+end
+
+local function ConditionGroups(conds)
+	local groups = {}
+	for group in conds:gmatch("%b[]") do
+		groups[#groups + 1] = group:sub(2, -2)
+	end
+	if #groups == 0 then groups[1] = "" end
+	return groups
+end
+
+local function MergeConditions(a, b)
+	if a == "" and b == "" then return "" end
+	return "[" .. ((a ~= "" and b ~= "") and (a .. "," .. b) or (a .. b)) .. "]"
+end
+
+function Generic:SetSmartTargetDrivers(drivers)
+	self.smartTargetDrivers = drivers
+end
+
+function Generic:SmartTargetSignature()
+	local sig = {}
+	for i, clause in ipairs(self._driverClauses or {}) do
+		local token = clause.value
+		sig[i] = tostring(SmartTargetType(self.state_types[token] or "empty", self.state_actions[token]))
+	end
+	return table.concat(sig, ",")
+end
+
+function Generic:BuildUnitDriver(clauses)
+	local parts = {}
+	for _, clause in ipairs(clauses) do
+		local token = clause.value
+		local targetType = SmartTargetType(self.state_types[token] or "empty", self.state_actions[token])
+		local list = targetType and self.smartTargetDrivers[targetType]
+		if list then
+			for _, pageGroup in ipairs(ConditionGroups(clause.conds)) do
+				for entry in list:gmatch("[^;]+") do
+					entry = entry:match("^%s*(.-)%s*$")
+					local conds, value = entry:match("^(.*%])%s*(.-)$")
+					if not conds then conds, value = "", entry end
+					for _, targetGroup in ipairs(ConditionGroups(conds)) do
+						parts[#parts + 1] = MergeConditions(pageGroup, targetGroup) .. value
+					end
+				end
+			end
+		else
+			parts[#parts + 1] = clause.conds .. "nil"
+		end
+	end
+	return table.concat(parts, ";")
+end
+
 --- Set the page driver of this button. Call button:UpdateState() (or RefreshDrivers) afterwards.
 function Generic:SetStateDriver(driver)
 	if driver == "" then driver = nil end
@@ -762,6 +835,17 @@ function Generic:DoRefreshDrivers()
 			end
 			RegisterAttributeDriver(self, attr, table.concat(parts, ";"))
 		end
+	end
+
+	self._driverClauses = clauses
+	UnregisterAttributeDriver(self, "unit")
+	if self.smartTargetDrivers then
+		self._smartSig = self:SmartTargetSignature()
+		RegisterAttributeDriver(self, "unit", self:BuildUnitDriver(clauses))
+		self._unitDriven = true
+	elseif self._unitDriven then
+		self._unitDriven = nil
+		self:SetAttribute("unit", nil)
 	end
 
 	local state = tostring(self:GetAttribute("state") or "0")
@@ -2098,6 +2182,12 @@ function Update(self)
 	end
 
 	-- this could've been a spec change, need to call OnStateChanged for action buttons, if present
+	if NoSnippets and self.smartTargetDrivers and not InCombatLockdown() and self._state_type == "action" then
+		-- the spell in an action slot may have changed (e.g. dragged in), which changes its smart target type
+		if self:SmartTargetSignature() ~= self._smartSig then
+			self:RefreshDrivers()
+		end
+	end
 	if not NoSnippets and not InCombatLockdown() and self._state_type == "action" then
 		local onStateChanged = self:GetAttribute("OnStateChanged")
 		if onStateChanged then
