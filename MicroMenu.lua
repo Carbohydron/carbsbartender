@@ -119,6 +119,20 @@ function MicroMenuMod:OnEnable()
 			tDeleteItem(BT_MICRO_BUTTONS, "HelpMicroButton")
 		end
 
+		-- Forever's micro menu has different buttons (e.g. spellbook/talents/legacy); take whatever the client created
+		if Bartender4.IsForever and MicroMenu then
+			local names = {}
+			for _, child in ipairs({ MicroMenu:GetChildren() }) do
+				local name = child.GetName and child:GetName()
+				if name and child:IsObjectType("Button") then
+					table_insert(names, name)
+				end
+			end
+			if #names > 0 then
+				BT_MICRO_BUTTONS = names
+			end
+		end
+
 		for i=1, #BT_MICRO_BUTTONS do
 			local button = _G[BT_MICRO_BUTTONS[i]]
 			if button then

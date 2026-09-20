@@ -147,6 +147,13 @@ DefaultStanceMap = setmetatable({}, { __index = function(t,k)
 		newT = {
 			{ id = "soar", name = Bartender4.Compat.GetSpellName(369536), index = 1 },
 		}
+	elseif k == "WARRIOR" and Bartender4.IsForever then
+		-- Forever brings back the classic warrior stances (bonus bars 1-3)
+		newT = {
+			{ id = "battle", name = Bartender4.Compat.GetSpellName(2457), index = 1 },
+			{ id = "def", name = Bartender4.Compat.GetSpellName(71), index = 2 },
+			{ id = "berserker", name = Bartender4.Compat.GetSpellName(2458), index = 3 },
+		}
 	end
 	rawset(t, k, newT)
 
