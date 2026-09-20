@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: ForeverProbe
+## Notes: Diagnostic probe for porting Bartender4 to WoW: Forever. Type /fprobe
+## Author: carbsbartender
+## SavedVariables: ForeverProbeDB
+
+ForeverProbe.lua
