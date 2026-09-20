@@ -2659,6 +2659,8 @@ elseif FlyoutButtonMixin and UseCustomFlyout then
 	end
 else
 	function UpdateFlyout(self, isButtonDownOverride)
+		-- TODO(forever): flyouts; the Forever ActionButtonTemplate has no flyout border/arrow regions
+		if NoSnippets or not self.FlyoutBorderShadow then return end
 		self.FlyoutBorderShadow:Hide()
 		if self._state_type == "action" then
 			-- based on ActionButton_UpdateFlyout in ActionButton.lua

@@ -45,7 +45,7 @@ LibKeyBound.Binder = LibKeyBound.Binder or {}
 -- #NODOC
 function LibKeyBound:Initialize()
 	do
-		local f = CreateFrame('Frame', 'KeyboundDialog', UIParent)
+		local f = CreateFrame('Frame', 'KeyboundDialog', UIParent, BackdropTemplateMixin and 'BackdropTemplate' or nil)
 		f:SetFrameStrata('DIALOG')
 		f:SetToplevel(true)
 		f:EnableMouse(true)

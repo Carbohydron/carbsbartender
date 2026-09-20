@@ -10,6 +10,25 @@ local tocVersion = select(4, GetBuildInfo())
 Bartender4.IsForever = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE) and tocVersion < 100000
 Bartender4.EffectiveTOC = Bartender4.IsForever and 120100 or tocVersion
 
+-- Several Blizzard frames/functions hooked by the Retail code paths do not exist on Forever. Skip such hooks
+-- (recorded in Bartender4.skippedHooks) instead of erroring; must happen before AceHook gets embedded.
+if Bartender4.IsForever then
+	local AceHook = LibStub("AceHook-3.0")
+	Bartender4.skippedHooks = {}
+	for _, name in ipairs({ "SecureHook", "Hook", "RawHook" }) do
+		local orig = AceHook[name]
+		AceHook[name] = function(self, a, b, ...)
+			local target, method = _G, a
+			if type(a) ~= "string" then target, method = a, b end
+			if type(target) ~= "table" or type(method) ~= "string" or type(target[method]) ~= "function" then
+				table.insert(Bartender4.skippedHooks, tostring(type(a) == "string" and a or (a and a.GetName and a:GetName()) or a) .. "." .. tostring(method))
+				return
+			end
+			return orig(self, a, b, ...)
+		end
+	end
+end
+
 Bartender4 = LibStub("AceAddon-3.0"):NewAddon(Bartender4, "Bartender4", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 _G.Bartender4 = Bartender4
 
