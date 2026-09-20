@@ -207,6 +207,44 @@ local function secure2()
 	end)
 end
 
+-- Open questions for the Bartender4 port: how does an attribute driver treat the value "nil", do
+-- Unregister* exist, and which action slots do the vehicle/override/possess bars use.
+local function secure3()
+	log("== PORT QUESTIONS ==")
+	log("UnregisterAttributeDriver: %s / UnregisterStateDriver: %s", type(UnregisterAttributeDriver), type(UnregisterStateDriver))
+	try("GetTempShapeshiftBarIndex", C_ActionBar.GetTempShapeshiftBarIndex)
+	try("C_ActionBar.GetActionBarPage", C_ActionBar.GetActionBarPage)
+	for _, n in ipairs({ "OverrideActionBarButton1", "PossessButton1", "MultiBarBottomLeftButton1", "MultiBarRightButton1",
+		"ExtraActionButton1", "PetActionButton1" }) do
+		local f = _G[n]
+		if f then
+			log("%-28s .action=%s attr action=%s attr actionpage=%s", n, tostring(f.action), tostring(f:GetAttribute("action")),
+				tostring(f:GetAttribute("actionpage")))
+		else
+			log("%-28s MISSING", n)
+		end
+	end
+	for _, n in ipairs({ "MainActionBar", "OverrideActionBar", "MultiBarBottomLeft" }) do
+		local f = _G[n]
+		if f then
+			log("%-28s attr actionpage=%s statehidden=%s", n, tostring(f:GetAttribute("actionpage")), tostring(f:GetAttribute("statehidden")))
+		end
+	end
+	local ok, err = pcall(function()
+		local b = CreateFrame("Button", "FProbeBtn3", UIParent, "SecureActionButtonTemplate")
+		RegisterAttributeDriver(b, "unit", "[mod:shift]player;nil")
+		RegisterAttributeDriver(b, "fade", "[mod:shift]true;false")
+		RegisterStateDriver(b, "visibility", "[mod:shift]hide;show")
+	end)
+	log("nil-value attribute driver setup: %s %s", ok and "OK" or "FAIL", ok and "" or tostring(err))
+	C_Timer.After(2, function()
+		local b = _G.FProbeBtn3
+		if not b then return end
+		local u, f = b:GetAttribute("unit"), b:GetAttribute("fade")
+		log("nil-driver result (no shift held): unit=%s (%s)  fade=%s (%s)  visibility shown=%s", tostring(u), type(u), tostring(f), type(f), tostring(b:IsShown()))
+	end)
+end
+
 local function report()
 	ForeverProbeDB = { when = date(), results = out }
 end
@@ -216,7 +254,7 @@ local function run()
 	changes = 0
 	changes2 = 0
 	log("ForeverProbe run %s", date())
-	env(); frames(); apis(); secure(); secure2()
+	env(); frames(); apis(); secure(); secure2(); secure3()
 	C_Timer.After(2.5, report)
 end
 

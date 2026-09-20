@@ -128,7 +128,7 @@ do
 
 	function barOnAttributeChanged(self, attribute, value)
 		if attribute == "fade" then
-			if value then
+			if value and value ~= "false" then -- on Forever the fade attribute is set by an attribute driver, as a string
 				self:SetScript("OnUpdate", barOnUpdateFunc)
 				self:ControlFadeOut(true)
 			else
@@ -455,11 +455,12 @@ function Bar:InitVisibilityDriver(returnOnly)
 	local tmpDriver
 	if returnOnly then
 		tmpDriver = self.hidedriver
-	else
+	elseif not Bartender4.IsForever then
 		UnregisterStateDriver(self, 'vis')
 	end
 	self.hidedriver = {}
 
+	if not Bartender4.IsForever then
 	self:SetAttribute("_onstate-vis", [[
 		if not newstate then return end
 		if newstate == "show" then
@@ -472,6 +473,7 @@ function Bar:InitVisibilityDriver(returnOnly)
 			self:Hide()
 		end
 	]])
+	end
 
 	if self.config.visibility.custom and not returnOnly then
 		table_insert(self.hidedriver, self.config.visibility.customdata or "")
@@ -517,14 +519,49 @@ function Bar:InitVisibilityDriver(returnOnly)
 	end
 end
 
+-- Forever: no restricted snippet can interpret the "vis" state, so the same conditions drive two things directly:
+-- the native "visibility" driver (show/hide), and a "fade" attribute (false / true / alpha percentage)
+local function SplitVisibilityDriver(driver)
+	local visibility, fade = {}, {}
+	for part in driver:gmatch("[^;]+") do
+		part = part:match("^%s*(.-)%s*$")
+		local conds, value = part:match("^(.*%])%s*(.-)$")
+		if not conds then conds, value = "", part end
+		if value == "hide" then
+			visibility[#visibility + 1], fade[#fade + 1] = conds .. "hide", conds .. "false"
+		elseif value == "show" then
+			visibility[#visibility + 1], fade[#fade + 1] = conds .. "show", conds .. "false"
+		elseif value:sub(1, 4) == "fade" then
+			visibility[#visibility + 1] = conds .. "show"
+			fade[#fade + 1] = conds .. ((value == "fade") and "true" or value:sub(6))
+		end
+	end
+	return table_concat(visibility, ";"), table_concat(fade, ";")
+end
+
 function Bar:ApplyVisibilityDriver()
 	if self.unlocked then return end
 	-- default state is shown
 	local driver = table_concat(self.hidedriver, ";")
+	if Bartender4.IsForever then
+		local visibility, fade = SplitVisibilityDriver(driver)
+		UnregisterStateDriver(self, "visibility")
+		UnregisterAttributeDriver(self, "fade")
+		RegisterStateDriver(self, "visibility", visibility)
+		RegisterAttributeDriver(self, "fade", fade)
+		return
+	end
 	RegisterStateDriver(self, "vis", driver)
 end
 
 function Bar:DisableVisibilityDriver()
+	if Bartender4.IsForever then
+		UnregisterStateDriver(self, "visibility")
+		UnregisterAttributeDriver(self, "fade")
+		self:SetAttribute("fade", "false")
+		self:Show()
+		return
+	end
 	UnregisterStateDriver(self, "vis")
 	self:SetAttribute("state-vis", "show")
 	self:Show()

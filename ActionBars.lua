@@ -14,7 +14,7 @@ local WoWTBC = (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC)
 local WoWWrath = (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC)
 local WoWCata = (WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC)
 local WoWMists = (WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC)
-local WoWMidnight = select(4, GetBuildInfo()) >= 120000
+local WoWMidnight = (select(2, ...)).EffectiveTOC >= 120000
 
 local LAB10 = LibStub("LibActionButton-1.0")
 local LSM = LibStub("LibSharedMedia-3.0")
@@ -357,6 +357,12 @@ function BT4ActionBars:Create(id, config, bindingmapping)
 
 	bar:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE")
 	bar:RegisterEvent("PLAYER_REGEN_ENABLED")
+
+	if Bartender4.IsForever then
+		-- the special bar page indices used by the state drivers are resolved when the drivers are built
+		bar:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
+		bar:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR")
+	end
 
 	self:CreateBarOption(id)
 

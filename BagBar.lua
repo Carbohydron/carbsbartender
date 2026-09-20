@@ -4,7 +4,7 @@
 ]]
 local _, Bartender4 = ...
 
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 if not WoW10 then return end
 
 local L = LibStub("AceLocale-3.0"):GetLocale("Bartender4")

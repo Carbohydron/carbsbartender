@@ -9,9 +9,9 @@ Bartender4.ActionBar = ActionBar
 
 local LAB10 = LibStub("LibActionButton-1.0")
 local LSM = LibStub("LibSharedMedia-3.0")
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 
-local tonumber, format, min = tonumber, format, min
+local tonumber, format, min, max = tonumber, format, min, max
 
 local GetSpellBookItemInfo = GetSpellBookItemInfo
 if C_SpellBook and C_SpellBook.GetSpellBookItemType then
@@ -190,6 +190,8 @@ local UpdateSmartTarget = [[
 ]]
 
 function ActionBar:SetupSmartTarget()
+	-- TODO(forever): needs restricted snippets; to be replaced by "unit" attribute drivers
+	if Bartender4.IsForever then return end
 	local s = [[
 		BT_Spell_Overrides = newtable()
 		BT_Spell_Overrides[16979] = 102401 -- wild charge (bear)
@@ -218,6 +220,7 @@ function ActionBar:SetupSmartTarget()
 end
 
 function ActionBar:SetupSmartButton(button)
+	if Bartender4.IsForever then return end
 	button:SetAttribute("OnStateChanged", [[
 		if self:GetAttribute("statehidden") then return end
 		local header = self:GetParent()
@@ -283,7 +286,14 @@ function ActionBar:UpdateButtons(numbuttons, offset)
 			buttons[i] = LAB10:CreateButton(absid, format("BT4Button%d", absid), self, nil)
 		end
 		local offsetid = (i + offset - 1) % 12 + 1
-		for k = 1,18 do
+		-- on Forever the vehicle/override/possess pages are not 16-18, use the indices the client reports
+		local vehiclePage, shapeshiftPage, overridePage = 16, 17, 18
+		local maxPage = 18
+		if Bartender4.IsForever then
+			vehiclePage, shapeshiftPage, overridePage = GetVehicleBarIndex(), C_ActionBar.GetTempShapeshiftBarIndex(), GetOverrideBarIndex()
+			maxPage = max(18, vehiclePage, shapeshiftPage, overridePage)
+		end
+		for k = 1, maxPage do
 			buttons[i]:SetState(k, "action", (k - 1) * 12 + offsetid)
 		end
 		buttons[i]:SetState(0, "action", (self.id - 1) * 12 + offsetid)
@@ -296,9 +306,9 @@ function ActionBar:UpdateButtons(numbuttons, offset)
 
 		if i == 12 then
 			if WoW10 then
-				buttons[i]:SetState(16, "custom", customExitButton)
-				buttons[i]:SetState(17, "custom", customExitButton)
-				buttons[i]:SetState(18, "custom", customExitButton)
+				buttons[i]:SetState(vehiclePage, "custom", customExitButton)
+				buttons[i]:SetState(shapeshiftPage, "custom", customExitButton)
+				buttons[i]:SetState(overridePage, "custom", customExitButton)
 			else
 				buttons[i]:SetState(11, "custom", customExitButton)
 				buttons[i]:SetState(12, "custom", customExitButton)

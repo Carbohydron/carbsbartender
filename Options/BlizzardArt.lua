@@ -12,7 +12,7 @@ local Bar = Bartender4.Bar.prototype
 
 local BlizzardArtMod = Bartender4:GetModule("BlizzardArt")
 
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 
 function BlizzardArtMod:SetupOptions()
 	if not self.options then

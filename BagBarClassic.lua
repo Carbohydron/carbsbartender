@@ -4,7 +4,7 @@
 ]]
 local _, Bartender4 = ...
 
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 if WoW10 then return end
 
 local WoWClassicEra = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)

@@ -8,7 +8,7 @@
 local _, Bartender4 = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("Bartender4")
 
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 
 -- fetch upvalues
 local Bar = Bartender4.Bar.prototype

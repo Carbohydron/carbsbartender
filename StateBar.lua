@@ -67,7 +67,8 @@ function StateBar:ApplyConfig(config)
 end
 
 function StateBar:OnEvent(event, ...)
-	if event == "PLAYER_TALENT_UPDATE" or event == "PLAYER_SPECIALIZATION_CHANGED" then
+	if event == "PLAYER_TALENT_UPDATE" or event == "PLAYER_SPECIALIZATION_CHANGED"
+		or event == "UPDATE_BONUS_ACTIONBAR" or event == "UPDATE_OVERRIDE_ACTIONBAR" then
 		if InCombatLockdown() then
 			self.updateStateOnCombatLeave = true
 		else
@@ -223,6 +224,10 @@ function StateBar:UpdateStates(returnOnly)
 		statedriver = statedriver:gsub("%[bonusbar:5%]11", "[overridebar][possessbar][shapeshift]possess;[bonusbar:5]dragon")
 	end
 
+	if Bartender4.IsForever then
+		return self:UpdateStatesForever(statedriver)
+	end
+
 	self:SetAttribute("_onstate-page", [[
 		if newstate == "possess" or newstate == "dragon" or newstate == "11" then
 			if HasVehicleActionBar() then
@@ -312,6 +317,46 @@ function StateBar:UpdateStates(returnOnly)
 	end
 
 	self:ForAll("UpdateState")
+end
+
+-- WoW: Forever cannot run restricted snippets, so the header cannot push a state into its buttons.
+-- Instead every button gets its own page driver (see LibActionButton-1.0 SetStateDriver); the page
+-- indices for possess/vehicle, which the snippet used to look up at runtime, are resolved here.
+local function ResolveSpecialStates(driver)
+	local out = {}
+	for part in driver:gmatch("[^;]+") do
+		part = part:match("^%s*(.-)%s*$")
+		local conds, value = part:match("^(.*%])%s*(.-)$")
+		if not conds then conds, value = "", part end
+		if value == "possess" then
+			local vehicle, override = GetVehicleBarIndex(), GetOverrideBarIndex()
+			local temp, bonus = C_ActionBar.GetTempShapeshiftBarIndex(), GetBonusBarIndex()
+			out[#out + 1] = "[vehicleui]" .. vehicle
+			for group in conds:gmatch("%b[]") do
+				if group == "[overridebar]" then
+					out[#out + 1] = group .. override
+				elseif group == "[possessbar]" then
+					out[#out + 1] = group .. bonus
+				elseif group == "[shapeshift]" then
+					out[#out + 1] = group .. temp
+				else
+					out[#out + 1] = group .. bonus
+				end
+			end
+		elseif value == "dragon" then
+			out[#out + 1] = conds .. "11"
+		else
+			out[#out + 1] = part
+		end
+	end
+	return table_concat(out, ";")
+end
+
+function StateBar:UpdateStatesForever(statedriver)
+	statedriver = ResolveSpecialStates(statedriver or "0")
+	self:ForAll("SetStateDriver", statedriver)
+	self:ForAll("UpdateState")
+	-- TODO(forever): smart target (mouseover/autoassist) needs per-button "unit" attribute drivers
 end
 
 function StateBar:GetStanceState(stance)

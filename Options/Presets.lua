@@ -10,7 +10,7 @@ local _, Bartender4 = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("Bartender4")
 local Bar = Bartender4.Bar.prototype
 
-local WoW11 = select(4, GetBuildInfo()) >= 110000
+local WoW11 = (select(2, ...)).EffectiveTOC >= 110000
 if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
 
 local PresetsMod = Bartender4:NewModule("Presets")

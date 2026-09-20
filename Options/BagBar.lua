@@ -7,7 +7,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Bartender4")
 
 local WoWClassicEra = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
 local WoWClassicBCC = (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC)
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 
 local BagBarMod = Bartender4:GetModule("BagBar")
 

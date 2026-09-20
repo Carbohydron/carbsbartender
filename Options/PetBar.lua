@@ -7,7 +7,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Bartender4")
 
 local PetBarMod = Bartender4:GetModule("PetBar")
 
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 
 -- fetch upvalues
 local ButtonBar = Bartender4.ButtonBar.prototype

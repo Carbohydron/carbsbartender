@@ -9,7 +9,7 @@ local ActionBar = Bartender4.ActionBar
 
 local lsmlist = AceGUIWidgetLSMlists
 
-local WoW10 = select(4, GetBuildInfo()) >= 100000
+local WoW10 = (select(2, ...)).EffectiveTOC >= 100000
 
 local tonumber, tostring, assert = tonumber, tostring, assert
 

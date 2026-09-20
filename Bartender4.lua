@@ -3,6 +3,13 @@
 	All rights reserved.
 ]]
 local _, Bartender4 = ...
+
+-- WoW: Forever runs the Retail (Midnight) UI but reports a 5-digit interface number (16001); it also cannot
+-- execute restricted snippets, so state switching must be done with attribute drivers.
+local tocVersion = select(4, GetBuildInfo())
+Bartender4.IsForever = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE) and tocVersion < 100000
+Bartender4.EffectiveTOC = Bartender4.IsForever and 120100 or tocVersion
+
 Bartender4 = LibStub("AceAddon-3.0"):NewAddon(Bartender4, "Bartender4", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 _G.Bartender4 = Bartender4
 
@@ -151,6 +158,8 @@ function Bartender4:UpdateModuleConfigs()
 end
 
 function Bartender4:RegisterPetBattleDriver()
+	-- needs restricted snippets to swap key bindings, unavailable on Forever
+	if self.IsForever then return end
 	if not self.petBattleController then
 		self.petBattleController = CreateFrame("Frame", nil, UIParent, "SecureHandlerStateTemplate")
 		self.petBattleController:SetAttribute("_onstate-petbattle", [[
@@ -177,6 +186,7 @@ end
 
 function Bartender4:UpdateBlizzardVehicle()
 	if not OverrideActionBar then return end -- classic doesn't have this
+	if self.IsForever then return end -- needs restricted snippets, unavailable on Forever
 	if self.db.profile.blizzardVehicle then
 		--MainMenuBar:SetParent(UIParent)
 		OverrideActionBar:SetParent(UIParent)
